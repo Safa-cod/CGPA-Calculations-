@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGPA Answer Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#E8ECF6;--sheet:#F6F8FD;--ink:#1B2559;--print:#C2185B;--line:#B9C1DE;--fill:#1B2559}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;padding:24px 14px 60px}
+.sheet{max-width:860px;margin:auto;background:var(--sheet);border:2px solid var(--ink);border-radius:6px;position:relative;box-shadow:8px 8px 0 var(--line)}
+.sheet:before,.sheet:after{content:"";position:absolute;top:0;bottom:0;width:10px;background:repeating-linear-gradient(var(--ink) 0 10px,transparent 10px 20px);opacity:.85}
+.sheet:before{left:0}.sheet:after{right:0}
+.inner{padding:28px 34px}
+header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:18px}
+h1{margin:0;font-size:2.2rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+h1 small{display:block;font-size:.85rem;font-weight:400;color:var(--print);margin-top:6px;letter-spacing:0}
+.stamp{width:150px;height:150px;border:4px double var(--print);border-radius:50%;display:grid;place-content:center;text-align:center;color:var(--print);transform:rotate(-8deg);flex:none}
+.stamp b{font-size:2.6rem;font-weight:800;line-height:1}.stamp span{font-size:.75rem}
+.meta{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0}
+label.f{display:flex;flex-direction:column;font-size:.8rem;gap:4px}
+input{font:inherit;border:0;border-bottom:2px solid var(--ink);background:transparent;padding:5px 2px;color:var(--ink);width:130px}
+input:focus-visible,button:focus-visible{outline:3px solid var(--print);outline-offset:2px}
+.legend,.row{display:grid;grid-template-columns:1.4fr 64px repeat(10,30px) 28px;gap:6px;align-items:center}
+.legend{font-size:.72rem;text-align:center;padding-bottom:6px;color:var(--print)}
+.legend span:first-child,.legend span:nth-child(2){text-align:left}
+.row{padding:9px 0;border-top:1px dashed var(--line)}
+.row input{width:100%}
+.b{width:28px;height:28px;border-radius:50%;border:2px solid var(--print);background:transparent;cursor:pointer;padding:0;transition:background .12s,transform .12s}
+.b:active{transform:scale(.88)}
+.b[aria-pressed=true]{background:var(--fill);border-color:var(--fill)}
+.x{border:0;background:none;color:var(--print);font-size:1.2rem;cursor:pointer}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{font:inherit;font-weight:600;border:2px solid var(--ink);background:var(--ink);color:var(--sheet);padding:9px 16px;border-radius:4px;cursor:pointer}
+.btn.alt{background:transparent;color:var(--ink)}
+.sum{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:2px solid var(--ink)}
+.sum div{font-size:.8rem}.sum b{display:block;font-size:1.8rem;letter-spacing:-.02em}
+h2{font-size:1.1rem;margin:30px 0 8px}
+.rec{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}
+.msg{color:var(--print);font-size:.85rem;min-height:1.2em;margin-top:8px}
+@media(max-width:720px){
+ .sheet:before,.sheet:after{display:none}.inner{padding:20px 16px}
+ .legend{display:none}
+ .row{grid-template-columns:1fr 64px 28px}
+ .row .grades{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:8px 0;justify-items:center}
+ .grades .b{width:auto;min-width:44px;height:34px;border-radius:17px;font:600 .75rem 'Bricolage Grotesque',sans-serif;color:var(--ink)}
+ .grades .b:after{content:attr(data-g)}
+ .grades .b[aria-pressed=true]{color:var(--sheet)}
+}
+@media(min-width:721px){.row .grades{display:contents}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+textarea{font:inherit;width:100%;border:2px solid var(--ink);background:transparent;color:var(--ink);padding:8px;border-radius:4px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<main class="sheet"><div class="inner">
+<header>
+  <h1>CGPA Answer Sheet<small>Fill one bubble per course. 4.00 scale.</small></h1>
+  <div class="stamp" aria-live="polite"><b id="cg">0.00</b><span>CGPA</span></div>
+</header>
+
+<div class="meta">
+  <label class="f">Semester name<input id="label" placeholder="Spring 2026"></label>
+  <label class="f">Previous CGPA<input id="pc" type="number" step="0.01" min="0" max="4" placeholder="0.00"></label>
+  <label class="f">Previous credits<input id="pcr" type="number" step="0.5" min="0" placeholder="0"></label>
+</div>
+
+<label class="f">Quick input (one course per line: name credit grade)
+  <textarea id="bulk" rows="4" placeholder="CSE365 3 A&#10;CSE384 3 B+&#10;CSE359 3 A-"></textarea>
+</label>
+
+<div class="legend" id="legend"></div>
+<div id="rows"></div>
+
+<div class="bar">
+  <button class="btn alt" id="add">Add course</button>
+  <button class="btn" id="save">Save semester</button>
+  <button class="btn alt" id="clear">Clear sheet</button>
+</div>
+<div class="msg" id="msg" role="status"></div>
+
+<div class="sum">
+  <div>Semester GPA<b id="gpa">0.00</b></div>
+  <div>Credits this semester<b id="cr">0</b></div>
+  <div>Total credits<b id="tcr">0</b></div>
+</div>
+
+<h2>Saved semesters</h2>
+<div id="recs"><p class="msg">Nothing saved yet. Fill the sheet and press Save semester.</p></div>
+</div></main>
+
+<script>
+const G = ['A+','A','A-','B+','B','B-','C+','C','D','F'];
+const P = {'A+':4,'A':3.75,'A-':3.5,'B+':3.25,'B':3,'B-':2.75,'C+':2.5,'C':2.25,'D':2,'F':0};
+let courses = [{name:'',credit:3,grade:''}];
+const $ = id => document.getElementById(id);
+const say = t => { $('msg').textContent = t; };
+
+$('legend').innerHTML = '<span>Course</span><span>Credit</span>' + G.map(g=>`<span>${g}</span>`).join('') + '<span></span>';
+
+function render(){
+  $('rows').innerHTML = courses.map((c,i)=>`
+   <div class="row">
+     <input data-i="${i}" data-k="name" value="${c.name}" placeholder="e.g. CSE365" aria-label="Course name">
+     <input data-i="${i}" data-k="credit" type="number" step="0.5" min="0.5" value="${c.credit}" aria-label="Credit">
+     <div class="grades">${G.map(g=>`<button class="b" data-i="${i}" data-g="${g}" aria-pressed="${c.grade===g}" aria-label="${g}"></button>`).join('')}</div>
+     <button class="x" data-del="${i}" aria-label="Remove course">×</button>
+   </div>`).join('');
+  recalc();
+}
+
+function localCalc(){
+  let pts=0,cr=0;
+  courses.forEach(c=>{const k=+c.credit; if(c.grade&&k>0){pts+=P[c.grade]*k;cr+=k;}});
+  const pcr=+$('pcr').value||0, pg=pcr?(+$('pc').value||0):0, t=cr+pcr;
+  return {gpa:cr?pts/cr:0, cgpa:t?(pts+pg*pcr)/t:0, credits:cr, totalCredits:t};
+}
+
+let timer;
+function recalc(){
+  clearTimeout(timer);
+  timer=setTimeout(async()=>{
+    let r;
+    try{
+      const res=await fetch('/api/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
+      r=await res.json();
+    }catch{ r=localCalc(); }
+    $('cg').textContent=r.cgpa.toFixed(2);
+    $('gpa').textContent=r.gpa.toFixed(2);
+    $('cr').textContent=r.credits;
+    $('tcr').textContent=r.totalCredits;
+  },120);
+}
+const payload = () => ({courses, prevCgpa:+$('pc').value||0, prevCredits:+$('pcr').value||0});
+
+$('rows').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.g){ courses[b.dataset.i].grade=b.dataset.g; render(); }
+  if(b.dataset.del!==undefined){ courses.splice(b.dataset.del,1); if(!courses.length) courses.push({name:'',credit:3,grade:''}); render(); }
+});
+$('rows').addEventListener('input',e=>{
+  const {i,k}=e.target.dataset; if(i===undefined) return;
+  courses[i][k]=e.target.value; recalc();
+});
+['pc','pcr'].forEach(id=>$(id).addEventListener('input',recalc));
+$('add').onclick=()=>{courses.push({name:'',credit:3,grade:''});render();};
+$('clear').onclick=()=>{courses=[{name:'',credit:3,grade:''}];$('label').value='';render();say('');};
+
+$('save').onclick=async()=>{
+  const done=courses.filter(c=>c.grade);
+  if(!done.length) return say('Fill at least one grade bubble before saving.');
+  try{
+    const res=await fetch('/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload(),courses:done,label:$('label').value})});
+    if(!res.ok) throw 0;
+    say('Semester saved.'); loadRecs();
+  }catch{ say('Could not save. Start the backend with npm start.'); }
+};
+
+async function loadRecs(){
+  try{
+    const list=await (await fetch('/api/records')).json();
+    if(!list.length) return;
+    $('recs').innerHTML=list.map(r=>`<div class="rec"><span>${r.label}: GPA ${r.result.gpa.toFixed(2)}, CGPA ${r.result.cgpa.toFixed(2)}</span><button class="x" data-rm="${r.id}" aria-label="Delete">×</button></div>`).join('');
+  }catch{}
+}
+$('recs').addEventListener('click',async e=>{
+  const id=e.target.dataset.rm; if(!id) return;
+  await fetch('/api/records/'+id,{method:'DELETE'}); loadRecs();
+});
+
+$('bulk').addEventListener('input',()=>{
+  const rows=$('bulk').value.split('\n')
+    .map(l=>l.trim().split(/\s+/))
+    .filter(p=>p.length>=3)
+    .map(p=>({name:p.slice(0,-2).join(' '),credit:parseFloat(p[p.length-2]),grade:p[p.length-1].toUpperCase()}))
+    .filter(c=>c.credit>0&&c.grade in P);
+  if(rows.length){courses=rows;render();}
+});
+
+render(); loadRecs();
+</script>
+</body>
+</html>
